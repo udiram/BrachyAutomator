@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    .step-completed {
+        text-decoration: line-through;
+        color: #888;
+    }
+    .hidden {
+        display: none;
+    }
+    .checklist-section {
+        margin-top: 2rem;
+        border-left: 4px solid var(--primary-color);
+        padding-left: 1rem;
+    }
+    .calc-box {
+        background: #e9f5ff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    .warning-box {
+        background: #fff3cd;
+        color: #856404;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+    .checklist-item-container {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+    }
+    .btn-outline-secondary {
+        border: 1px solid #ced4da;
+        background: transparent;
+        color: #6c757d;
+    }
+    .btn-outline-secondary:hover {
+        background: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% macro checklist_item(id, label) %}
+<div class="checklist-item-container mb-2">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="form-group form-check mb-0">
+            <input type="checkbox" class="form-check-input" id="{{ id }}">
+            <label class="form-check-label" for="{{ id }}">{{ label }}</label>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary btn-details" data-target="{{ id }}-details" style="font-size: 0.8rem;">Example/Note</button>
+    </div>
+    <div id="{{ id }}-details" class="hidden ml-4 mt-2 p-2" style="background: #f9f9f9; border-left: 3px solid #ddd;">
+        <textarea class="form-control mb-2 step-note" placeholder="Add notes..." rows="2" data-id="{{ id }}"></textarea>
+        <input type="file" class="form-control-file step-file" data-id="{{ id }}" accept="image/*" capture="environment">
+        <div class="file-list small text-muted mt-1" id="{{ id }}-files"></div>
+        <div class="file-preview-container" id="{{ id }}-preview"></div>
+    </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+<script>
+    window.current_user_id = '{{ current_user_id }}';
+</script>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Eye Plaque Packaging</h2>
+    <div style="display: flex; gap: 0.5rem;">
+        <button id="btn-view-history" class="btn btn-secondary">📋 View History</button>
+        <button id="btn-new-task" class="btn">➕ Start New Task</button>
+        <button id="btn-reset-task" class="btn btn-secondary hidden">🔄 Reset Task</button>
+    </div>
+</div>
+
+<!-- Task History Sidebar -->
+<div id="task-history-sidebar" class="task-sidebar hidden">
+    <div class="sidebar-header">
+        <h3>Task History</h3>
+        <button id="btn-close-sidebar" class="btn-close-sidebar">×</button>
+    </div>
+    <div class="sidebar-content">
+        <div class="search-box">
+            <input type="text" id="task-search" class="form-control" placeholder="Search by Task ID, MRN, or User...">
+        </div>
+        <div id="task-list" class="task-list">
+            <div class="loading-spinner">Loading tasks...</div>
+        </div>
+    </div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
+
+<div id="task-container" class="hidden">
+    <div id="read-only-banner" class="hidden" style="background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 2px solid #f59e0b;">
+        <strong>📋 Viewing Completed Task</strong> - This task is read-only. You can view details and download the report.
+    </div>
+    <div class="card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 style="margin: 0;">Task ID: <span id="task-id-display"></span></h4>
+                <p class="text-muted" style="margin: 0.5rem 0 0 0;">Started: <span id="task-start-time"></span></p>
+            </div>
+            <div>
+                <div class="form-group" style="margin: 0; min-width: 200px;">
+                    <label for="task-mrn" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Patient MRN</label>
+                    <input type="text" id="task-mrn" class="form-control" placeholder="Enter MRN" style="font-size: 0.95rem;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Under the Leaded Shield -->
+    <div class="card">
+        <h3>1. Under the Leaded Shield</h3>
+        <div class="checklist-group" id="group-shield">
+            {{ checklist_item('check-1-1', 'Place both the plaque and template in CONFLIKT Disinfectant solution') }}
+            {{ checklist_item('check-1-2', 'Confirm the correct plaque type and number of seeds are present') }}
+            {{ checklist_item('check-1-3', 'Place the CONFLIKT Disinfectant solution container into the leaded pig') }}
+            {{ checklist_item('check-1-4', 'Discard the peel packs if they contain any blood or bodily fluids') }}
+        </div>
+    </div>
+
+    <!-- Section 2: Lab Bench Prep -->
+    <div class="card">
+        <h3>2. Lab Bench Preparation</h3>
+        <div class="checklist-group" id="group-bench">
+            {{ checklist_item('check-2-1', 'Place the leaded pig in the shipping container') }}
+            {{ checklist_item('check-2-2', 'Place the sheet of Styrofoam on top of the leaded pig') }}
+            {{ checklist_item('check-2-3', 'Complete the Certificate of Return form (Example)') }}
+            {{ checklist_item('check-2-4', 'Place the Certificate of Return form inside of the shipping container') }}
+            {{ checklist_item('check-2-5', 'Seal the box') }}
+            {{ checklist_item('check-2-6', 'Use the white out labels to cover any existing labels on the shipping container (UN2910, UN2915, RQ, White I)') }}
+        </div>
+    </div>
+
+    <!-- Section 3: Activity Calculation -->
+    <div class="card">
+        <h3>3. Calculate Total Contained Activity</h3>
+        <div class="calc-box">
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <div style="flex: 1;">
+                    <h5 style="color: var(--primary-color); margin-bottom: 1rem;">Assay Seeds</h5>
+                    <div class="form-group">
+                        <label>Number of Seeds</label>
+                        <input type="number" id="calc-assay-seeds" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Activity per Seed (mCi)</label>
+                        <input type="number" step="0.01" id="calc-assay-activity" class="form-control" value="0">
+                    </div>
+                </div>
+                <div style="flex: 1; border-left: 1px solid #ddd; padding-left: 2rem;">
+                    <h5 style="color: var(--primary-color); margin-bottom: 1rem;">Plaque Seeds</h5>
+                    <div class="form-group">
+                        <label>Number of Seeds</label>
+                        <input type="number" id="calc-plaque-seeds" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Activity per Seed (mCi)</label>
+                        <input type="number" step="0.01" id="calc-plaque-activity" class="form-control" value="0">
+                    </div>
+                </div>
+            </div>
+            <p class="text-muted small mt-4">Formula: Total mCi = [(Assay Seeds × mCi) + (Plaque Seeds × mCi)] × 1.62</p>
+            <button id="btn-calculate" class="btn">Calculate Activity</button>
+            
+            <div id="calc-results" class="hidden mt-4">
+                <h4>Results</h4>
+                <p><strong>Total Contained Activity:</strong> <span id="res-mci" style="font-size: 1.2rem; font-weight: bold;"></span> mCi</p>
+                <p id="res-gbq-row" class="hidden"><strong>Total Activity (GBq):</strong> <span id="res-gbq"></span> GBq</p>
+                <div id="calc-category" class="warning-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Conditional Workflows -->
+    <div id="workflow-section" class="card hidden">
+        <h3 id="workflow-title">4. Specific Packaging Instructions</h3>
+        
+        <!-- Workflow A: < 10 mCi -->
+        <div id="flow-less-10" class="hidden checklist-section">
+            <h4>< 10 mCi Protocol</h4>
+            <div class="checklist-group">
+                {{ checklist_item('check-a-1', 'Attach UN2910 labels on opposite sides of the box') }}
+                {{ checklist_item('check-a-2', 'Measure exposure rate at surface. If > 0.5 mR/hr, contact IsoAid.') }}
+            </div>
+        </div>
+
+        <!-- Workflow B: 10 - 81 mCi -->
+        <div id="flow-10-81" class="hidden checklist-section">
+            <h4>10 mCi – 81 mCi Protocol</h4>
+            <div class="checklist-group">
+                {{ checklist_item('check-b-1', 'Attach labels on opposite sides (left to right): RQ, UN2910') }}
+                {{ checklist_item('check-b-2', 'Use shipping declaration forms that say UN2910') }}
+                {{ checklist_item('check-b-3', 'Write info on declaration forms: FedEx tracking #, Name/Title, Date, Signature') }}
+                {{ checklist_item('check-b-4', 'Attach adhesive envelope to top of box (do not seal)') }}
+                {{ checklist_item('check-b-5', 'Place shipping declaration forms in envelope') }}
+                {{ checklist_item('check-b-6', 'Attach FedEx label to top of box') }}
+                {{ checklist_item('check-b-7', 'Measure exposure rate at surface. If > 0.5 mR/hr, contact IsoAid.') }}
+            </div>
+        </div>
+
+        <!-- Workflow C: > 81 mCi -->
+        <div id="flow-more-81" class="hidden checklist-section">
+            <h4>> 81 mCi Protocol</h4>
+            <div class="checklist-group">
+                {{ checklist_item('check-c-1', 'Calculate total activity in GBq (Already done above)') }}
+                {{ checklist_item('check-c-2', 'Round contained activity to one decimal point') }}
+                {{ checklist_item('check-c-3', 'Complete White I label: Contents (I-125), Total Activity (GBq)') }}
+                {{ checklist_item('check-c-4', 'Complete Certificate of Return form in units of GBq') }}
+                {{ checklist_item('check-c-5', 'Attach labels on opposite sides (left to right): RQ, UN2915, White I') }}
+                {{ checklist_item('check-c-6', 'Use shipping declaration forms that say UN2915') }}
+                {{ checklist_item('check-c-7', 'Write info on declaration forms: Tracking #, Name/Title, Date, Signature, Total Activity (GBq)') }}
+                {{ checklist_item('check-c-8', 'Attach adhesive envelope to top of box (do not seal)') }}
+                {{ checklist_item('check-c-9', 'Place shipping declaration forms in envelope') }}
+                {{ checklist_item('check-c-10', 'Attach FedEx label to top of box') }}
+                {{ checklist_item('check-c-11', 'Measure exposure rate at surface. Contact IsoAid if > 0.5 mR/hr.') }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 5: Radiation Survey -->
+    <div class="card">
+        <h3>5. Final Radiation Survey</h3>
+        
+        <div class="form-group">
+            <label for="rad-reading">Surface Reading (mrem/hr)</label>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="number" step="0.1" id="rad-reading" class="form-control" placeholder="Enter measured value" style="max-width: 200px;">
+                <span style="color: var(--text-muted);">mrem/hr</span>
+            </div>
+            <small class="text-muted">Enter the measured exposure rate at the surface of the box using your survey meter.</small>
+        </div>
+
+        <button id="btn-check-rad" class="btn">Check Labeling Requirement</button>
+        <div id="rad-result" class="hidden mt-3">
+            <p><strong>Classification:</strong> <span id="rad-class" style="font-weight: bold;"></span></p>
+            <p class="text-muted small" id="rad-desc"></p>
+        </div>
+    </div>
+
+    <!-- Section 6: Finalize -->
+    <div class="card">
+        <h3>6. Complete & Export</h3>
+        <p>Review all steps above before completing.</p>
+        <div class="d-flex" style="gap: 1rem; flex-wrap: wrap;">
+            <button id="btn-export-pdf" class="btn">📄 Export Summary PDF</button>
+            <button id="btn-export-csv" class="btn btn-secondary">📊 Download Calculation CSV</button>
+            <button id="btn-finish-task" class="btn" style="background: linear-gradient(135deg, var(--success-color), #059669);">✅ Finish Task</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Image Modal -->
+<div id="image-modal" class="image-modal">
+    <span class="image-modal-close">&times;</span>
+    <div class="image-modal-content">
+        <img id="modal-image" src="" alt="Preview">
+        <div class="image-modal-caption" id="modal-caption"></div>
+    </div>
+</div>
+
+<!-- Finish Task Modal -->
+<div id="finish-modal" class="modal hidden">
+    <div class="modal-content">
+        <h3 id="finish-modal-title">Complete Task</h3>
+        <div id="finish-modal-body"></div>
+        <div class="modal-actions">
+            <button id="finish-modal-cancel" class="btn btn-secondary">Cancel</button>
+            <button id="finish-modal-confirm" class="btn">Confirm</button>
+        </div>
+    </div>
+</div>
+<div id="modal-overlay" class="modal-overlay hidden"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/eye_plaque.js') }}"></script>
+{% endblock %}

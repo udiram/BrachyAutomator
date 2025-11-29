@@ -1,0 +1,86 @@
+[
+  {
+    "id": "TASK-866178",
+    "mrn": "123456",
+    "startTime": "2025-11-29T21:47:46.178Z",
+    "checks": {
+      "check-1-1": true,
+      "check-1-2": true,
+      "check-2-1": true,
+      "check-2-6": true,
+      "check-c-2": true,
+      "check-c-8": true,
+      "check-c-11": true
+    },
+    "calculations": {
+      "assaySeeds": 1,
+      "assayApparent": 4,
+      "plaqueSeeds": 12,
+      "plaqueApparent": 8,
+      "containedMci": 162,
+      "containedGbq": 5.9940059940059935
+    },
+    "radReading": 0.05,
+    "notes": {},
+    "uploads": {
+      "check-2-6": [
+        {
+          "filename": "IMG_8846.jpg",
+          "path": "/uploads/TASK-866178/check-2-6/IMG_8846.jpg",
+          "uploadedAt": "2025-11-29T21:47:59.840Z"
+        }
+      ],
+      "check-c-11": [
+        {
+          "filename": "IMG_8846.jpg",
+          "path": "/uploads/TASK-866178/check-c-11/IMG_8846.jpg",
+          "uploadedAt": "2025-11-29T21:48:24.917Z"
+        }
+      ]
+    },
+    "endTime": "2025-11-29T21:48:35.583Z",
+    "user": "udbhavram@uabmc.edu"
+  },
+  {
+    "calculations": {
+      "assayApparent": 4,
+      "assaySeeds": 1,
+      "containedGbq": 5.9940059940059935,
+      "containedMci": 162,
+      "plaqueApparent": 8,
+      "plaqueSeeds": 12
+    },
+    "checks": {
+      "check-1-1": true,
+      "check-1-2": true,
+      "check-2-1": true,
+      "check-2-6": true,
+      "check-c-11": true,
+      "check-c-2": true,
+      "check-c-8": true
+    },
+    "endTime": "2025-11-29T21:54:14.118Z",
+    "id": "TASK-866178",
+    "mrn": "123456",
+    "notes": {},
+    "radReading": 0.05,
+    "startTime": "2025-11-29T21:47:46.178Z",
+    "uploads": {
+      "check-2-6": [
+        {
+          "filename": "IMG_8846.jpg",
+          "path": "/uploads/TASK-866178/check-2-6/IMG_8846.jpg",
+          "uploadedAt": "2025-11-29T21:47:59.840Z"
+        }
+      ],
+      "check-c-11": [
+        {
+          "filename": "IMG_8846.jpg",
+          "path": "/uploads/TASK-866178/check-c-11/IMG_8846.jpg",
+          "uploadedAt": "2025-11-29T21:48:24.917Z"
+        }
+      ]
+    },
+    "user": "udbhavram@uabmc.edu"
+  }
+]
