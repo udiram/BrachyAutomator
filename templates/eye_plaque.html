@@ -61,9 +61,6 @@
 {% endmacro %}
 
 {% block content %}
-<script>
-    window.current_user_id = '{{ current_user_id }}';
-</script>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Eye Plaque Packaging</h2>
     <div style="display: flex; gap: 0.5rem;">
@@ -256,7 +253,7 @@
 <div id="image-modal" class="image-modal">
     <span class="image-modal-close">&times;</span>
     <div class="image-modal-content">
-        <img id="modal-image" src="" alt="Preview">
+        <img id="modal-image" alt="Preview">
         <div class="image-modal-caption" id="modal-caption"></div>
     </div>
 </div>

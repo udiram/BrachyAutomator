@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const btnCalculate = document.getElementById('btn-calculate');
     const btnCheckRad = document.getElementById('btn-check-rad');
+
+    // Set by the current-user meta tag (no inline script, so CSP can stay strict).
+    let current_user_id = document.querySelector('meta[name="current-user"]')?.getAttribute('content') || 'Unknown';
     
     // Initialize or load state
     let currentTask = JSON.parse(sessionStorage.getItem('brachy_current_task')) || null;
@@ -136,9 +139,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 ${task.calculations ? `<div class="task-item-meta">Activity: ${task.calculations.containedMci?.toFixed(2) || 'N/A'} mCi</div>` : ''}
                 <div class="task-item-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="viewTask('${task.id}')">View</button>
-                    <button class="btn btn-sm btn-secondary" onclick="downloadTaskPDF('${task.id}')">PDF</button>
-                    ${task.user === current_user_id ? `<button class="btn btn-sm" style="background: var(--danger-color);" onclick="deleteTask('${task.id}')">Delete</button>` : ''}
+                    <button class="btn btn-sm btn-secondary" data-action="view-task" data-task-id="${escapeHtml(task.id)}">View</button>
+                    <button class="btn btn-sm btn-secondary" data-action="download-pdf" data-task-id="${escapeHtml(task.id)}">PDF</button>
+                    ${task.user === current_user_id ? `<button class="btn btn-sm" style="background: var(--danger-color);" data-action="delete-task" data-task-id="${escapeHtml(task.id)}">Delete</button>` : ''}
                 </div>
             </div>
         `).join('');
@@ -153,17 +156,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Get current user ID from global variable set in template
-    let current_user_id = 'Unknown';
-    if (typeof window.current_user_id !== 'undefined') {
-        current_user_id = window.current_user_id;
+    // Escape text for HTML body and attribute contexts. Attribute values
+    // are interpolated into double-quoted data-* attributes.
+    function escapeHtml(text) {
+        return String(text == null ? '' : text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
-    // Helper function to escape HTML
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    function renderFilePreview(file) {
+        const path = escapeHtml(file.path || '');
+        const name = escapeHtml(file.filename || '');
+        return `
+            <div class="file-preview" data-action="expand-image" data-image-path="${path}" data-image-name="${name}">
+                <img src="${path}" alt="${name}">
+                <div class="file-name">${name}</div>
+            </div>
+        `;
     }
 
     window.viewTask = function(taskId) {
@@ -238,6 +250,17 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Error deleting task');
         });
     };
+
+    taskList?.addEventListener('click', function(e) {
+        const button = e.target.closest('[data-action]');
+        if (!button || !taskList.contains(button)) return;
+        const taskId = button.getAttribute('data-task-id');
+        if (!taskId) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'view-task') window.viewTask(taskId);
+        else if (action === 'download-pdf') window.downloadTaskPDF(taskId);
+        else if (action === 'delete-task') window.deleteTask(taskId);
+    });
 
     function startNewTask() {
         const id = 'TASK-' + Date.now().toString().slice(-6);
@@ -350,12 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
         for (const [stepId, files] of Object.entries(task.uploads || {})) {
             const previewContainer = document.getElementById(`${stepId}-preview`);
             if (previewContainer && files.length > 0) {
-                previewContainer.innerHTML = files.map(file => `
-                    <div class="file-preview" onclick="expandImage('${file.path}', '${file.filename}')">
-                        <img src="${file.path}" alt="${file.filename}" onerror="this.style.display='none'">
-                        <div class="file-name">${file.filename}</div>
-                    </div>
-                `).join('');
+                previewContainer.innerHTML = files.map(file => renderFilePreview(file)).join('');
             }
         }
     }
@@ -503,6 +521,24 @@ document.addEventListener('DOMContentLoaded', function() {
             modal.classList.add('active');
         }
     };
+
+    document.addEventListener('click', function(e) {
+        const preview = e.target.closest('[data-action="expand-image"]');
+        if (!preview) return;
+        window.expandImage(
+            preview.getAttribute('data-image-path'),
+            preview.getAttribute('data-image-name')
+        );
+    });
+
+    // error does not bubble; capture it so a broken upload preview can hide
+    // without an inline onerror handler (which CSP would block).
+    document.addEventListener('error', function(e) {
+        const img = e.target;
+        if (img && img.tagName === 'IMG' && img.closest && img.closest('.file-preview')) {
+            img.style.display = 'none';
+        }
+    }, true);
 
     // Close image modal
     const imageModalClose = document.querySelector('.image-modal-close');
@@ -753,13 +789,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Show preview with click to expand
                     if (previewContainer) {
-                        const existingPreviews = currentTask.uploads[id].map((file, idx) => `
-                            <div class="file-preview" onclick="expandImage('${file.path}', '${file.filename}')">
-                                <img src="${file.path}" alt="${file.filename}" onerror="this.style.display='none'">
-                                <div class="file-name">${file.filename}</div>
-                            </div>
-                        `).join('');
-                        previewContainer.innerHTML = existingPreviews;
+                        previewContainer.innerHTML = currentTask.uploads[id].map(file => renderFilePreview(file)).join('');
                     }
                 } else {
                     alert('Upload failed: ' + data.message);
