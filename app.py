@@ -29,6 +29,60 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Applied to every response (HTML, JSON, static, errors, redirects).
+# Existing values are left alone so a route can set a stricter header.
+# No external origins: templates and JS only load same-origin CSS/JS,
+# same-origin images, and same-origin fetch. Styles stay 'unsafe-inline'
+# because the templates use <style> blocks and style attributes. Scripts
+# do not: the one inline script and the inline event handlers were moved
+# out so script-src can stay 'self'. camera=(self) is the only relaxed
+# permission — checklist photos use <input capture="environment">.
+SECURITY_HEADERS = {
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Frame-Options': 'DENY',
+    'Permissions-Policy': 'camera=(self), microphone=(), geolocation=(), payment=()',
+    'Content-Security-Policy': (
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "font-src 'self'; "
+        "connect-src 'self'; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'; "
+        "frame-ancestors 'none'"
+    ),
+}
+
+
+def apply_security_headers(response):
+    for name, value in SECURITY_HEADERS.items():
+        if name not in response.headers:
+            response.headers[name] = value
+    return response
+
+
+@app.after_request
+def set_security_headers(response):
+    return apply_security_headers(response)
+
+
+@app.before_request
+def use_secure_session_cookie_outside_debug():
+    """Secure session cookies break plain-http local development.
+
+    Browsers will not store a Secure cookie on http://localhost. `python
+    app.py` runs with debug on, so the flag is dropped there. Gunicorn
+    (Railway) leaves debug off; TLS terminates at the proxy and the
+    browser still sees HTTPS, so the cookie stays Secure. HSTS is sent
+    either way — browsers ignore it over http — and this app does not
+    redirect HTTP to HTTPS.
+    """
+    app.config['SESSION_COOKIE_SECURE'] = not app.debug
+
 # Import auth functions (we will create this next)
 from brachy.auth import load_users, User
 
